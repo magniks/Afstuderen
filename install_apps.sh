@@ -26,13 +26,13 @@ echo "Install unzip"
 sudo apt install unzip -y
 
 echo "Installing Java"
-sudo apt install openjdk-11-jdk -y
+sudo add-apt-repository ppa:openjdk-r/ppa -y
+sudo apt update -y
+sudo apt install openjdk-21-jdk -y
 
-
-latest_version=$(curl -s https://portswigger.net/burp/releases/community | grep -oP 'version=\K[\d.]+(?=")' | head -n 1)
-download_url="https://portswigger.net/burp/releases/download?product=community&version=$latest_version&type=jar"
-echo "Installing Burp Suite Community Edition version $latest_version..."
+download_url="https://portswigger.net/burp/releases/download?product=community&type=jar"
+echo "Installing Burp Suite"
 wget --output-document=burpsuite_community.jar "$download_url"
 
 echo "Installing Oracle Developer VScode extension"
-code --install-extension Oracle.oracledevtools --force --no-sandbox --user-data-dir
+runuser -l azureadmin -c 'code --install-extension Oracle.oracledevtools --force'
