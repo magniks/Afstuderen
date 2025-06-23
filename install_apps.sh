@@ -22,6 +22,12 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -y wireshark
 echo "Installing curl"
 sudo apt install curl -y
 
+echo "Installing jq"
+sudo apt install jq -y
+
+echo "installing passwd"
+sudo apt install passwd -y
+
 echo "Installing VSCode"
 sudo snap install code --classic
 
@@ -36,6 +42,19 @@ sudo apt install openjdk-21-jdk -y
 echo "Installing Burp Suite"
 download_url="https://portswigger.net/burp/releases/download?product=community&type=jar"
 wget --output-document=burpsuite_community.jar "$download_url"
+sudo mkdir -p /opt/burp
+sudo mv burpsuite_community.jar /opt/burp/
+echo -e '#!/bin/bash\njava -jar /opt/burp/burpsuite_community.jar' | sudo tee /usr/local/bin/burp
+sudo chmod +x /usr/local/bin/burp
+cat <<EOF | sudo tee /usr/share/applications/burp.desktop
+[Desktop Entry]
+Name=Burp Suite Community
+Exec=java -jar /opt/burp/burpsuite_community.jar
+Icon=utilities-terminal
+Type=Application
+Categories=Utility;
+EOF
+export VAULT_ADDR=http://172.200.72.230:8200
 
 echo "Installing Oracle Developer VScode extension"
 runuser -l azureadmin -c 'code --install-extension Oracle.oracledevtools --force'
@@ -55,3 +74,29 @@ sudo apt install xrdp -y
 sudo systemctl enable xrdp
 sudo systemctl start xrdp
 sudo apt install ubuntu-desktop -y
+
+echo "Setting op boa cli"
+wget https://github.com/openbao/openbao/releases/download/v2.2.2/bao_2.2.2_linux_amd64.deb
+sudo dpkg -i bao_2.2.2_linux_amd64.deb
+
+echo "Adding vault address"
+# Waarde voor VAULT_ADDR
+VAULT_ADDR_VALUE="http://172.200.72.230:8200"
+BASHRC_FILE="$HOME/.bashrc"
+
+# Check of de regel al bestaat
+if grep -q "export VAULT_ADDR=" "$BASHRC_FILE"; then
+    echo "VAULT_ADDR staat al in $BASHRC_FILE. Bijwerken..."
+    # Update de bestaande regel
+    sed -i "s|export VAULT_ADDR=.*|export VAULT_ADDR='$VAULT_ADDR_VALUE'|" "$BASHRC_FILE"
+else
+    echo "export VAULT_ADDR='$VAULT_ADDR_VALUE'" >> "$BASHRC_FILE"
+    echo "VAULT_ADDR toegevoegd aan $BASHRC_FILE"
+fi
+
+# Herladen
+echo "Herladen van $BASHRC_FILE..."
+source "$BASHRC_FILE"
+
+# Controleren
+echo "Ingestelde VAULT_ADDR: $VAULT_ADDR"
