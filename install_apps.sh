@@ -1,5 +1,11 @@
 #!/bin/bash
 
+USERNAME=$1
+PASSWORD=$2
+
+useradd -m "$USERNAME"
+echo "$USERNAME:$PASSWORD" | chpasswd
+
 echo "Running apt update"
 sudo apt-get update -y
 
