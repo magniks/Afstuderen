@@ -28,6 +28,15 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -y wireshark
 echo "Installing curl"
 sudo apt install curl -y
 
+echo "Installing certs"
+sudo apt install ca-certificates -y
+
+echo "Installing gnupg"
+sudo apt install gnupg -y
+
+echo "Installing lsb-release"
+sudo apt install lsb-release -y
+
 echo "Installing jq"
 sudo apt install jq -y
 
@@ -60,10 +69,20 @@ Icon=utilities-terminal
 Type=Application
 Categories=Utility;
 EOF
-export VAULT_ADDR=http://172.200.72.230:8200
+
+echo "adding docker gpg"
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+echo "adding docker repo"
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+echo "installing docker"
+sudo apt update
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
 
 echo "Installing Oracle Developer VScode extension"
-runuser -l azureadmin -c 'code --install-extension Oracle.oracledevtools --force'
+runuser -l "$USERNAME" -c 'code --install-extension Oracle.oracledevtools --force'
 
 echo "Installing git"
 sudo apt install git -y
@@ -81,12 +100,15 @@ sudo systemctl enable xrdp
 sudo systemctl start xrdp
 sudo apt install ubuntu-desktop -y
 
+echo "install pentesttools"
+git clone https://Hartlief@bitbucket.org/flod-marnix/pentestscripts.git
+
 echo "Setting op boa cli"
 wget https://github.com/openbao/openbao/releases/download/v2.2.2/bao_2.2.2_linux_amd64.deb
 sudo dpkg -i bao_2.2.2_linux_amd64.deb
 
 echo "Adding vault address"
-# Waarde voor VAULT_ADDR
+export VAULT_ADDR=http://172.200.72.230:8200
 VAULT_ADDR_VALUE="http://172.200.72.230:8200"
 BASHRC_FILE="$HOME/.bashrc"
 
@@ -105,4 +127,4 @@ echo "Herladen van $BASHRC_FILE..."
 source "$BASHRC_FILE"
 
 # Controleren
-echo "Ingestelde VAULT_ADDR: $VAULT_ADDR"
+echo "Ingestelde VAULT_ADDR: $VAULT_ADDR_VALUE"
