@@ -80,6 +80,8 @@ sudo apt install git -y
 echo "Installing python"
 sudo apt install python -y
 sudo apt install python3 -y
+sudo apt install python3-pip -y
+pip install oracledb
 
 echo "Installing mitm proxy"
 sudo apt install mitmproxy -y
