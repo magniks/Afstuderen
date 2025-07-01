@@ -12,7 +12,7 @@ echo "Running as user: $(whoami)"
 echo ""
 
 
-sudo useradd -m "$USERNAME"
+sudo adduser -m "$USERNAME"
 echo "$USERNAME:$PASSWORD" | sudo chpasswd
 
 echo "Running apt update"
@@ -90,7 +90,38 @@ sudo systemctl enable xrdp
 sudo systemctl start xrdp
 sudo apt install ubuntu-desktop -y
 
-echo "Setting op boa cli"
+echo "install pentesttools"
+sudo git clone https://x-token-auth:ATCTT3xFfGN0eC-nRrpwtw90xTakZi6E0iwiwRF-MLUJ0OEyVDKQvod05eSwqvi3mw4wc4e_iPc4UD1m2yZIkbadVVlfXgRdCtWm3qKNgB7VFpvhzjvrEEjIYjPWAxnLmzxJ3DM6_JgY2VrSc91q-UfvrXZDc6R5uB2u88rLMAtyYquuBVBf11U=B6AA6BC9@bitbucket.org/flod-marnix/pentestscripts.git /opt/pentesttools
+
+cat <<EOF | sudo tee /usr/share/applications/oracleenum.desktop
+[Desktop Entry]
+Name=Oracle Enumeration Script
+Exec=python3 /opt/pentesttools/enum_oracle.py
+Icon=utilities-terminal
+Type=Application
+Categories=Utility;
+Terminal=true
+EOF
+
+cat <<EOF | sudo tee /usr/share/applications/oraclevuln.desktop
+[Desktop Entry]
+Name=Oracle Password Script
+Exec=python3 /opt/pentesttools/vuln_oracle.py
+Icon=utilities-terminal
+Type=Application
+Categories=Utility;
+Terminal=true
+EOF
+
+sudo chmod +x /usr/share/applications/oracle*.desktop
+
+user_home="/home/$USERNAME"
+sudo mkdir -p "$user_home/Desktop"
+sudo cp /usr/share/applications/oracle*.desktop "$user_home/Desktop/"
+sudo chown "$USERNAME:$USERNAME" "$user_home/Desktop/"*.desktop
+sudo chmod +x "$user_home/Desktop/"*.desktop
+
+echo "Setting op bao cli"
 wget https://github.com/openbao/openbao/releases/download/v2.2.2/bao_2.2.2_linux_amd64.deb
 sudo dpkg -i bao_2.2.2_linux_amd64.deb
 
