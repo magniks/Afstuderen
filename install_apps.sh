@@ -146,11 +146,8 @@ wget https://github.com/openbao/openbao/releases/download/v2.2.2/bao_2.2.2_linux
 sudo dpkg -i bao_2.2.2_linux_amd64.deb
 
 echo "Setting VAULT_ADDR globally"
-
-# Vault-adres opslaan
 VAULT_ADDR_VALUE="http://172.200.72.230:8200"
 
-# 1. Voor alle bestaande gebruikers: voeg toe aan .bashrc
 for u in $(ls /home); do
     bashrc="/home/$u/.bashrc"
     if grep -q "export VAULT_ADDR=" "$bashrc" 2>/dev/null; then
@@ -161,17 +158,14 @@ for u in $(ls /home); do
     sudo chown "$u:$u" "$bashrc"
 done
 
-# 2. Voor toekomstige gebruikers: voeg toe aan /etc/skel/.bashrc
 if grep -q "export VAULT_ADDR=" /etc/skel/.bashrc; then
     sudo sed -i "s|export VAULT_ADDR=.*|export VAULT_ADDR=$VAULT_ADDR_VALUE|" /etc/skel/.bashrc
 else
     echo "export VAULT_ADDR=$VAULT_ADDR_VALUE" | sudo tee -a /etc/skel/.bashrc
 fi
 
-# 3. (Optioneel) Systeemwijd beschikbaar maken via /etc/environment
 sudo sed -i '/^VAULT_ADDR=/d' /etc/environment
 echo "VAULT_ADDR=$VAULT_ADDR_VALUE" | sudo tee -a /etc/environment
 
-# 4. Toon resultaat voor huidige shell (optioneel)
 export VAULT_ADDR=$VAULT_ADDR_VALUE
 echo "Ingestelde VAULT_ADDR voor huidige shell: $VAULT_ADDR"
