@@ -3,8 +3,8 @@
 USERNAME=$1
 PASSWORD=$2
 
-useradd -m "$USERNAME"
-echo "$USERNAME:$PASSWORD" | chpasswd
+sudo adduser -m "$USERNAME"
+echo "$USERNAME:$PASSWORD" | sudo chpasswd
 
 echo "Running apt update"
 sudo apt-get update -y
@@ -27,15 +27,6 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -y wireshark
 
 echo "Installing curl"
 sudo apt install curl -y
-
-echo "Installing certs"
-sudo apt install ca-certificates -y
-
-echo "Installing gnupg"
-sudo apt install gnupg -y
-
-echo "Installing lsb-release"
-sudo apt install lsb-release -y
 
 echo "Installing jq"
 sudo apt install jq -y
@@ -69,20 +60,10 @@ Icon=utilities-terminal
 Type=Application
 Categories=Utility;
 EOF
-
-echo "adding docker gpg"
-sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-
-echo "adding docker repo"
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-echo "installing docker"
-sudo apt update
-sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+export VAULT_ADDR=http://172.200.72.230:8200
 
 echo "Installing Oracle Developer VScode extension"
-runuser -l "$USERNAME" -c 'code --install-extension Oracle.oracledevtools --force'
+runuser -l azureadmin -c 'code --install-extension Oracle.oracledevtools --force'
 
 echo "Installing git"
 sudo apt install git -y
@@ -90,8 +71,6 @@ sudo apt install git -y
 echo "Installing python"
 sudo apt install python -y
 sudo apt install python3 -y
-sudo apt install python3-pip -y
-pip install oracledb
 
 echo "Installing mitm proxy"
 sudo apt install mitmproxy -y
@@ -102,70 +81,36 @@ sudo systemctl enable xrdp
 sudo systemctl start xrdp
 sudo apt install ubuntu-desktop -y
 
-echo "install pentesttools"
-sudo git clone https://x-token-auth:ATCTT3xFfGN0eC-nRrpwtw90xTakZi6E0iwiwRF-MLUJ0OEyVDKQvod05eSwqvi3mw4wc4e_iPc4UD1m2yZIkbadVVlfXgRdCtWm3qKNgB7VFpvhzjvrEEjIYjPWAxnLmzxJ3DM6_JgY2VrSc91q-UfvrXZDc6R5uB2u88rLMAtyYquuBVBf11U=B6AA6BC9@bitbucket.org/flod-marnix/pentestscripts.git /opt/pentesttools
-
-cat <<EOF | sudo tee /usr/share/applications/oracleenum.desktop
-[Desktop Entry]
-Name=Oracle Enumeration Script
-Exec=python3 /opt/pentesttools/enum_oracle.py
-Icon=utilities-terminal
-Type=Application
-Categories=Utility;
-Terminal=true
-EOF
-
-cat <<EOF | sudo tee /usr/share/applications/oraclevuln.desktop
-[Desktop Entry]
-Name=Oracle Password Script
-Exec=python3 /opt/pentesttools/vuln_oracle.py
-Icon=utilities-terminal
-Type=Application
-Categories=Utility;
-Terminal=true
-EOF
-
-sudo chmod +x /usr/share/applications/oracle*.desktop
-
-# Voeg ze toe aan de Desktop van alle bestaande users
-for u in $(ls /home); do
-    user_home="/home/$u"
-    sudo mkdir -p "$user_home/Desktop"
-    sudo cp /usr/share/applications/oracle*.desktop "$user_home/Desktop/"
-    sudo chown "$u:$u" "$user_home/Desktop/"*.desktop
-    sudo chmod +x "$user_home/Desktop/"*.desktop
-done
-
-# Voor toekomstige users
-sudo mkdir -p /etc/skel/Desktop
-sudo cp /usr/share/applications/oracle*.desktop /etc/skel/Desktop/
-sudo chmod +x /etc/skel/Desktop/oracle*.desktop
-
 echo "Setting op boa cli"
 wget https://github.com/openbao/openbao/releases/download/v2.2.2/bao_2.2.2_linux_amd64.deb
 sudo dpkg -i bao_2.2.2_linux_amd64.deb
 
-echo "Setting VAULT_ADDR globally"
+echo "Adding vault address"
+# Waarde voor VAULT_ADDR
 VAULT_ADDR_VALUE="http://172.200.72.230:8200"
+BASHRC_FILE="$HOME/.bashrc"
 
-for u in $(ls /home); do
-    bashrc="/home/$u/.bashrc"
-    if grep -q "export VAULT_ADDR=" "$bashrc" 2>/dev/null; then
-        sudo sed -i "s|export VAULT_ADDR=.*|export VAULT_ADDR=$VAULT_ADDR_VALUE|" "$bashrc"
-    else
-        echo "export VAULT_ADDR=$VAULT_ADDR_VALUE" | sudo tee -a "$bashrc"
-    fi
-    sudo chown "$u:$u" "$bashrc"
-done
-
-if grep -q "export VAULT_ADDR=" /etc/skel/.bashrc; then
-    sudo sed -i "s|export VAULT_ADDR=.*|export VAULT_ADDR=$VAULT_ADDR_VALUE|" /etc/skel/.bashrc
+# Check of de regel al bestaat
+if grep -q "export VAULT_ADDR=" "$BASHRC_FILE"; then
+    echo "VAULT_ADDR staat al in $BASHRC_FILE. Bijwerken..."
+    # Update de bestaande regel
+    sed -i "s|export VAULT_ADDR=.*|export VAULT_ADDR='$VAULT_ADDR_VALUE'|" "$BASHRC_FILE"
 else
-    echo "export VAULT_ADDR=$VAULT_ADDR_VALUE" | sudo tee -a /etc/skel/.bashrc
+    echo "export VAULT_ADDR='$VAULT_ADDR_VALUE'" >> "$BASHRC_FILE"
+    echo "VAULT_ADDR toegevoegd aan $BASHRC_FILE"
 fi
 
-sudo sed -i '/^VAULT_ADDR=/d' /etc/environment
-echo "VAULT_ADDR=$VAULT_ADDR_VALUE" | sudo tee -a /etc/environment
+# Herladen
+echo "Herladen van $BASHRC_FILE..."
+source "$BASHRC_FILE"
 
-export VAULT_ADDR=$VAULT_ADDR_VALUE
-echo "Ingestelde VAULT_ADDR voor huidige shell: $VAULT_ADDR"
+# Controleren
+echo "Ingestelde VAULT_ADDR: $VAULT_ADDR"
+
+sudo usermod -aG sudo,video,audio,ssl-cert,xrdp $USERNAME
+sudo echo "startxfce4" > /home/$USERNAME/.xsession
+sudo chmod +x /home/$USERNAME/.xsession
+sudo chown $USERNAME:$USERNAME /home/$USERNAME/.xsession
+sudo runuser -l $USERNAME -c 'touch ~/.Xauthority && chmod 600 ~/.Xauthority'
+sudo systemctl restart xrdp
+
