@@ -12,7 +12,7 @@ echo "Running as user: $(whoami)"
 echo ""
 
 
-sudo adduser -m "$USERNAME"
+sudo useradd -m "$USERNAME"
 echo "$USERNAME:$PASSWORD" | sudo chpasswd
 
 echo "Running apt update"
