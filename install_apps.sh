@@ -101,7 +101,25 @@ sudo systemctl start xrdp
 sudo apt install ubuntu-desktop -y
 
 echo "install pentesttools"
-git clone https://Hartlief@bitbucket.org/flod-marnix/pentestscripts.git
+sudo git clone https://x-token-auth:ATCTT3xFfGN0eC-nRrpwtw90xTakZi6E0iwiwRF-MLUJ0OEyVDKQvod05eSwqvi3mw4wc4e_iPc4UD1m2yZIkbadVVlfXgRdCtWm3qKNgB7VFpvhzjvrEEjIYjPWAxnLmzxJ3DM6_JgY2VrSc91q-UfvrXZDc6R5uB2u88rLMAtyYquuBVBf11U=B6AA6BC9@bitbucket.org/flod-marnix/pentestscripts.git /opt/pentesttools
+
+cat <<EOF | sudo tee /usr/share/applications/oracleenum.desktop
+[Desktop Entry]
+Name=Oracle Enumeration Script
+Exec=python /opt/pentesttools/enum_oracle.py
+Icon=utilities-terminal
+Type=Application
+Categories=Utility;
+EOF
+
+cat <<EOF | sudo tee /usr/share/applications/oraclevuln.desktop
+[Desktop Entry]
+Name=Oracle Password Script
+Exec=python /opt/pentesttools/vuln_oracle.py
+Icon=utilities-terminal
+Type=Application
+Categories=Utility;
+EOF
 
 echo "Setting op boa cli"
 wget https://github.com/openbao/openbao/releases/download/v2.2.2/bao_2.2.2_linux_amd64.deb
