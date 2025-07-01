@@ -90,6 +90,8 @@ sudo apt install git -y
 echo "Installing python"
 sudo apt install python -y
 sudo apt install python3 -y
+sudo apt install python3-pip -y
+pip install oracledb
 
 echo "Installing mitm proxy"
 sudo apt install mitmproxy -y
@@ -143,28 +145,33 @@ echo "Setting op boa cli"
 wget https://github.com/openbao/openbao/releases/download/v2.2.2/bao_2.2.2_linux_amd64.deb
 sudo dpkg -i bao_2.2.2_linux_amd64.deb
 
-echo "Adding vault address"
-export VAULT_ADDR=http://172.200.72.230:8200
+echo "Setting VAULT_ADDR globally"
 
-# Voeg toe aan alle bestaande gebruikers
+# Vault-adres opslaan
+VAULT_ADDR_VALUE="http://172.200.72.230:8200"
+
+# 1. Voor alle bestaande gebruikers: voeg toe aan .bashrc
 for u in $(ls /home); do
     bashrc="/home/$u/.bashrc"
     if grep -q "export VAULT_ADDR=" "$bashrc" 2>/dev/null; then
-        sudo sed -i "s|export VAULT_ADDR=.*|export VAULT_ADDR='$VAULT_ADDR_VALUE'|" "$bashrc"
+        sudo sed -i "s|export VAULT_ADDR=.*|export VAULT_ADDR=$VAULT_ADDR_VALUE|" "$bashrc"
     else
-        echo "export VAULT_ADDR='$VAULT_ADDR_VALUE'" | sudo tee -a "$bashrc"
+        echo "export VAULT_ADDR=$VAULT_ADDR_VALUE" | sudo tee -a "$bashrc"
     fi
     sudo chown "$u:$u" "$bashrc"
 done
 
-# Voeg toe aan /etc/skel/.bashrc voor toekomstige users
+# 2. Voor toekomstige gebruikers: voeg toe aan /etc/skel/.bashrc
 if grep -q "export VAULT_ADDR=" /etc/skel/.bashrc; then
-    sudo sed -i "s|export VAULT_ADDR=.*|export VAULT_ADDR='$VAULT_ADDR_VALUE'|" /etc/skel/.bashrc
+    sudo sed -i "s|export VAULT_ADDR=.*|export VAULT_ADDR=$VAULT_ADDR_VALUE|" /etc/skel/.bashrc
 else
-    echo "export VAULT_ADDR='$VAULT_ADDR_VALUE'" | sudo tee -a /etc/skel/.bashrc
+    echo "export VAULT_ADDR=$VAULT_ADDR_VALUE" | sudo tee -a /etc/skel/.bashrc
 fi
 
-echo "Herladen van $BASHRC_FILE..."
-source "$BASHRC_FILE"
+# 3. (Optioneel) Systeemwijd beschikbaar maken via /etc/environment
+sudo sed -i '/^VAULT_ADDR=/d' /etc/environment
+echo "VAULT_ADDR=$VAULT_ADDR_VALUE" | sudo tee -a /etc/environment
 
-echo "Ingestelde VAULT_ADDR: $VAULT_ADDR_VALUE"
+# 4. Toon resultaat voor huidige shell (optioneel)
+export VAULT_ADDR=$VAULT_ADDR_VALUE
+echo "Ingestelde VAULT_ADDR voor huidige shell: $VAULT_ADDR"
