@@ -160,7 +160,4 @@ sudo systemctl restart xrdp
 
 sudo ls -la /home/$USERNAME/
 sudo groups $USERNAME
-sudo cat /home/azureadmin/.xsession
-sudo cat /home/$USERNAME/.xsession
-
 
