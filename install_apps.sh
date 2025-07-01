@@ -147,10 +147,15 @@ else
 fi
 
 sudo usermod -aG sudo,video,audio,ssl-cert,xrdp $USERNAME
-echo "startxfce4" | sudo tee /home/$USERNAME/.xsession > /dev/null
-sudo chmod +x /home/$USERNAME/.xsession
-sudo chown $USERNAME:$USERNAME /home/$USERNAME/.xsession
-sudo runuser -l $USERNAME -c 'touch ~/.Xauthority && chmod 600 ~/.Xauthority'
+# Verwijder .xsession zodat GNOME wordt gebruikt
+sudo rm -f /home/$USERNAME/.xsession
+
+# Voeg gebruiker toe aan XRDP-relevante groepen
+usermod -aG sudo,video,audio,ssl-cert,xrdp $USERNAME
+
+# Zorg voor .Xauthority
+runuser -l "$USERNAME" -c 'touch ~/.Xauthority && chmod 600 ~/.Xauthority'
+
 sudo systemctl restart xrdp
 
 sudo ls -la /home/$USERNAME/
