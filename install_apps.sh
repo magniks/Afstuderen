@@ -1,7 +1,18 @@
 #!/bin/bash
+set -euo pipefail
 
-USERNAME=$1
-PASSWORD=$2
+USERNAME="${1:-}"
+PASSWORD="${2:-}"
+
+LOGFILE="/var/log/install_debug.log"
+exec >> "$LOGFILE" 2>&1
+
+echo "====== $(date) ======"
+echo "USERNAME: '$USERNAME'"
+echo "PASSWORD: '${#PASSWORD} characters'"  # log alleen lengte, niet de waarde zelf
+echo "Running as user: $(whoami)"
+echo "HOME is: $HOME"
+echo ""
 
 if [[ -z "$USERNAME" || -z "$PASSWORD" ]]; then
   echo "ERROR: USERNAME or PASSWORD is empty."
