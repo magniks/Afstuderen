@@ -145,9 +145,15 @@ else
 fi
 
 sudo usermod -aG sudo,video,audio,ssl-cert,xrdp $USERNAME
-sudo echo "startxfce4" > /home/$USERNAME/.xsession
+echo "startxfce4" | sudo tee /home/$USERNAME/.xsession > /dev/null
 sudo chmod +x /home/$USERNAME/.xsession
 sudo chown $USERNAME:$USERNAME /home/$USERNAME/.xsession
 sudo runuser -l $USERNAME -c 'touch ~/.Xauthority && chmod 600 ~/.Xauthority'
 sudo systemctl restart xrdp
+
+sudo ls -la /home/$USERNAME/
+sudo groups $USERNAME
+sudo cat /home/azureadmin/.xsession
+sudo cat /home/$USERNAME/.xsession
+
 
