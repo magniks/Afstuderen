@@ -3,6 +3,11 @@
 USERNAME=$1
 PASSWORD=$2
 
+if [[ -z "$USERNAME" || -z "$PASSWORD" ]]; then
+  echo "ERROR: USERNAME or PASSWORD is empty."
+  exit 1
+fi
+
 sudo adduser -m "$USERNAME"
 echo "$USERNAME:$PASSWORD" | sudo chpasswd
 
