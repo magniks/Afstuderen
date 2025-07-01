@@ -106,20 +106,38 @@ sudo git clone https://x-token-auth:ATCTT3xFfGN0eC-nRrpwtw90xTakZi6E0iwiwRF-MLUJ
 cat <<EOF | sudo tee /usr/share/applications/oracleenum.desktop
 [Desktop Entry]
 Name=Oracle Enumeration Script
-Exec=python /opt/pentesttools/enum_oracle.py
+Exec=python3 /opt/pentesttools/enum_oracle.py
 Icon=utilities-terminal
 Type=Application
 Categories=Utility;
+Terminal=true
 EOF
 
 cat <<EOF | sudo tee /usr/share/applications/oraclevuln.desktop
 [Desktop Entry]
 Name=Oracle Password Script
-Exec=python /opt/pentesttools/vuln_oracle.py
+Exec=python3 /opt/pentesttools/vuln_oracle.py
 Icon=utilities-terminal
 Type=Application
 Categories=Utility;
+Terminal=true
 EOF
+
+sudo chmod +x /usr/share/applications/oracle*.desktop
+
+# Voeg ze toe aan de Desktop van alle bestaande users
+for u in $(ls /home); do
+    user_home="/home/$u"
+    sudo mkdir -p "$user_home/Desktop"
+    sudo cp /usr/share/applications/oracle*.desktop "$user_home/Desktop/"
+    sudo chown "$u:$u" "$user_home/Desktop/"*.desktop
+    sudo chmod +x "$user_home/Desktop/"*.desktop
+done
+
+# Voor toekomstige users
+sudo mkdir -p /etc/skel/Desktop
+sudo cp /usr/share/applications/oracle*.desktop /etc/skel/Desktop/
+sudo chmod +x /etc/skel/Desktop/oracle*.desktop
 
 echo "Setting op boa cli"
 wget https://github.com/openbao/openbao/releases/download/v2.2.2/bao_2.2.2_linux_amd64.deb
@@ -127,22 +145,26 @@ sudo dpkg -i bao_2.2.2_linux_amd64.deb
 
 echo "Adding vault address"
 export VAULT_ADDR=http://172.200.72.230:8200
-VAULT_ADDR_VALUE="http://172.200.72.230:8200"
-BASHRC_FILE="$HOME/.bashrc"
 
-# Check of de regel al bestaat
-if grep -q "export VAULT_ADDR=" "$BASHRC_FILE"; then
-    echo "VAULT_ADDR staat al in $BASHRC_FILE. Bijwerken..."
-    # Update de bestaande regel
-    sed -i "s|export VAULT_ADDR=.*|export VAULT_ADDR='$VAULT_ADDR_VALUE'|" "$BASHRC_FILE"
+# Voeg toe aan alle bestaande gebruikers
+for u in $(ls /home); do
+    bashrc="/home/$u/.bashrc"
+    if grep -q "export VAULT_ADDR=" "$bashrc" 2>/dev/null; then
+        sudo sed -i "s|export VAULT_ADDR=.*|export VAULT_ADDR='$VAULT_ADDR_VALUE'|" "$bashrc"
+    else
+        echo "export VAULT_ADDR='$VAULT_ADDR_VALUE'" | sudo tee -a "$bashrc"
+    fi
+    sudo chown "$u:$u" "$bashrc"
+done
+
+# Voeg toe aan /etc/skel/.bashrc voor toekomstige users
+if grep -q "export VAULT_ADDR=" /etc/skel/.bashrc; then
+    sudo sed -i "s|export VAULT_ADDR=.*|export VAULT_ADDR='$VAULT_ADDR_VALUE'|" /etc/skel/.bashrc
 else
-    echo "export VAULT_ADDR='$VAULT_ADDR_VALUE'" >> "$BASHRC_FILE"
-    echo "VAULT_ADDR toegevoegd aan $BASHRC_FILE"
+    echo "export VAULT_ADDR='$VAULT_ADDR_VALUE'" | sudo tee -a /etc/skel/.bashrc
 fi
 
-# Herladen
 echo "Herladen van $BASHRC_FILE..."
 source "$BASHRC_FILE"
 
-# Controleren
 echo "Ingestelde VAULT_ADDR: $VAULT_ADDR_VALUE"
